@@ -1,6 +1,5 @@
 import sys
-from tkinter import *
-from tkinter import messagebox
+from tkinter import Tk, Frame, Text, RIGHT, Y, NONE, BOTH, END, Toplevel, Button, OptionMenu, StringVar, IntVar, Label, PhotoImage, Spinbox, mainloop
 import random
 import os
 import re
@@ -85,7 +84,7 @@ def randomizer(min,max,avg,exponent):
         x+=0.1
         weights.append(1 / (pow(float(exponent), abs(floatavg - (float(x))))))  # Convert weight to integer
     rarity = random.choices(randarr, weights)
-    total_weight = sum(weights)
+    
     rarity[0] += 0.1
     return float(rarity[0])
 

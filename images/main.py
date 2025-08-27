@@ -1,4 +1,4 @@
-from tkinter import *
+from tkinter import Tk, IntVar, Label, Button, Radiobutton, W, RIGHT, Spinbox, LEFT, mainloop
 import random
 import os
 def read_elements_and_weights(filename,avg,min,max):
