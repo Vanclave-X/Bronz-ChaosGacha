@@ -37,13 +37,23 @@ jobs:
     - name: Create release zip
       run: |
         $VERSION = "${{ steps.get_version.outputs.VERSION }}"
-        $ZIP_FILE_NAME = "Gacha-Windows-$VERSION.zip"
-        # Add Gacha.exe to the root of the zip
-        cd dist
-        7z a ../$ZIP_FILE_NAME Gacha.exe
-        cd ..
-        # Add gachafiles and images folders to the existing zip
-        7z a $ZIP_FILE_NAME gachafiles/ images/
+        $ZIP_FILE_NAME = "Gacha-Windows.zip"
+
+        # Create a temporary Gacha directory
+        mkdir Gacha
+
+        # Move Gacha.exe into the temporary Gacha directory
+        mv dist/Gacha.exe Gacha/
+
+        # Move gachafiles and images into the temporary Gacha directory
+        mv gachafiles/ Gacha/
+        mv images/ Gacha/
+
+        # Zip the temporary Gacha directory
+        7z a $ZIP_FILE_NAME Gacha/
+
+        # Clean up the temporary Gacha directory
+        rm -r Gacha/
       shell: pwsh
 
     - name: Create GitHub Release
