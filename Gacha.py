@@ -260,40 +260,43 @@ def save_roll_to_file(element, rarity, odds, description, chosentype, min_val, a
         json.dump(rolls, f, indent=4)
     print(f"Roll saved to {current_save_file_path}")
 
-def select_or_create_save_file():
+def select_save_file():
     global current_save_file_path
-
-    # Try to open an existing file first
     file_path = filedialog.askopenfilename(
         initialdir=os.path.join(os.getcwd(), "gachafiles", "rolls"),
         title="Select Existing Save File",
         filetypes=(("JSON files", "*.json"), ("all files", "*.*")),
     )
-
-    if file_path:  # User selected an existing file
+    if file_path:
         current_save_file_path = file_path
         rollButton1.config(state=NORMAL)
-        saveFilePromptLabel.destroy()  # Hide the prompt
+        saveFilePromptLabel.destroy()
         print(f"Existing save file selected: {current_save_file_path}")
-    else:  # User cancelled or wants to create a new file
-        file_path = filedialog.asksaveasfilename(
-            initialdir=os.path.join(os.getcwd(), "gachafiles", "rolls"),
-            title="Create New Save File",
-            filetypes=(("JSON files", "*.json"), ("all files", "*.*")),
-            defaultextension=".json",
-        )
-        if file_path:
-            current_save_file_path = file_path
-            # Ensure the file is empty or initialized as an empty JSON array
-            if not os.path.exists(current_save_file_path) or os.path.getsize(current_save_file_path) == 0:
-                with open(current_save_file_path, "w") as f:
-                    json.dump([], f)
-            rollButton1.config(state=NORMAL)
-            saveFilePromptLabel.destroy()  # Hide the prompt
-            print(f"New save file created/selected: {current_save_file_path}")
-        else:
+    else:
+        print("No save file selected.")
+        if not current_save_file_path:
             rollButton1.config(state=DISABLED)
-            print("No save file selected.")
+
+def create_new_save_file():
+    global current_save_file_path
+    file_path = filedialog.asksaveasfilename(
+        initialdir=os.path.join(os.getcwd(), "gachafiles", "rolls"),
+        title="Create New Save File",
+        filetypes=(("JSON files", "*.json"), ("all files", "*.*")),
+        defaultextension=".json",
+    )
+    if file_path:
+        current_save_file_path = file_path
+        if not os.path.exists(current_save_file_path) or os.path.getsize(current_save_file_path) == 0:
+            with open(current_save_file_path, "w") as f:
+                json.dump([], f)
+        rollButton1.config(state=NORMAL)
+        saveFilePromptLabel.destroy()
+        print(f"New save file created/selected: {current_save_file_path}")
+    else:
+        print("No save file created.")
+        if not current_save_file_path:
+            rollButton1.config(state=DISABLED)
 
 def prepare_gacha():
     global activemode
@@ -624,16 +627,27 @@ saveFilePromptLabel = Label(
 )
 saveFilePromptLabel.place(x=512, y=100, in_=root, anchor="n")
 
-selectOrCreateFileButton = Button(
+createNewSaveFileButton = Button(
     root,
-    text="Select/Create Save File",
-    width=25,
-    command=lambda: select_or_create_save_file(),
+    text="Create New Save File",
+    width=20,
+    command=lambda: create_new_save_file(),
     font=(selectedfont, 12),
     background="#111",
     fg="#FFF",
 )
-selectOrCreateFileButton.place(x=750, y=110, in_=root, anchor="w")
+createNewSaveFileButton.place(x=800, y=100, in_=root, anchor="w")
+
+selectSaveFileButton = Button(
+    root,
+    text="Select Save File",
+    width=20,
+    command=lambda: select_save_file(),
+    font=(selectedfont, 12),
+    background="#111",
+    fg="#FFF",
+)
+selectSaveFileButton.place(x=800, y=140, in_=root, anchor="w")
 
 headerLabel = Label(
     root, pady=0, bg="#1f1f1f", fg="#FFF", font=(selectedfont, 20), wraplength=800
