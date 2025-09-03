@@ -3,7 +3,7 @@ name: Build Gacha.exe
 on:
   push:
     tags:
-      - 'v*' # Triggers on tags like v1.0.0, v1.0.0-beta, etc.
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -28,8 +28,7 @@ jobs:
     - name: Get version from tag
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-    
+      shell: bash
 
     - name: Build Gacha.exe
       run: uv run pyinstaller --onefile Gacha.py
@@ -37,22 +36,14 @@ jobs:
     - name: Create release zip
       run: |
         $VERSION = "${{ steps.get_version.outputs.VERSION }}"
-        $ZIP_FILE_NAME = "Gacha-Windows.zip"
+        $ZIP_FILE_NAME = "Gacha-Windows-$VERSION.zip"
 
-        # Create a temporary Gacha directory
         mkdir Gacha
-
-        # Move Gacha.exe into the temporary Gacha directory
         mv dist/Gacha.exe Gacha/
-
-        # Move gachafiles and images into the temporary Gacha directory
         mv gachafiles/ Gacha/
         mv images/ Gacha/
 
-        # Zip the temporary Gacha directory
         7z a $ZIP_FILE_NAME Gacha/
-
-        # Clean up the temporary Gacha directory
         rm -r Gacha/
       shell: pwsh
 
