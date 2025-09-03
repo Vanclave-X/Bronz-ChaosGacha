@@ -77,7 +77,7 @@ def read_file_with_weight(
                         rarities.pop()
                         continue
                     line = line.replace(pgtext, "")
-                    print("Replaced:" + line)
+                    # print("Replaced:" + line)
                 if familiartext in line:
                     if classicfamiliar:
                         elements.pop()
