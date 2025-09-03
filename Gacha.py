@@ -17,14 +17,20 @@ from tkinter import (
     PhotoImage,
     Spinbox,
     mainloop,
+    filedialog,
+    NORMAL,
+    DISABLED,
 )
 import random
 import os
 import re
 import webbrowser
 import subprocess
+import json
+from datetime import datetime
 
 pgmode = 0
+current_save_file_path = None
 classicfamiliar = 0
 scifi = 0
 
@@ -202,6 +208,16 @@ def run_gacha(
         #        print("length of description : " + str(len(selected_description)))
         descriptionLabel.config(text=selected_description)
         runcount += 1
+        save_roll_to_file(
+            selected_element,
+            selected_rarity,
+            round(luckpercentage, 2),
+            selected_description,
+            chosentype,
+            min,
+            avg,
+            max,
+        )
 
 
 #        averagecheck += raritypull
@@ -211,8 +227,80 @@ def run_gacha(
 #    print("Average rarity: " + str(averagepull) + ' ' + str(raritypull))
 
 
+def save_roll_to_file(element, rarity, odds, description, chosentype, min_val, avg_val, max_val):
+    global current_save_file_path
+    if not current_save_file_path:
+        print("No save file selected. Roll not saved.")
+        return
+
+    roll_data = {
+        "timestamp": datetime.now().isoformat(),
+        "type": chosentype,
+        "element": element,
+        "rarity": rarity,
+        "odds": odds,
+        "description": description,
+        "min_rarity": min_val,
+        "avg_rarity": avg_val,
+        "max_rarity": max_val,
+    }
+
+    rolls = []
+    if os.path.exists(current_save_file_path):
+        try:
+            with open(current_save_file_path, 'r') as f:
+                rolls = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: Could not decode JSON from {current_save_file_path}. Starting with empty rolls.")
+            rolls = []
+
+    rolls.append(roll_data)
+
+    with open(current_save_file_path, 'w') as f:
+        json.dump(rolls, f, indent=4)
+    print(f"Roll saved to {current_save_file_path}")
+
+def select_or_create_save_file():
+    global current_save_file_path
+
+    # Try to open an existing file first
+    file_path = filedialog.askopenfilename(
+        initialdir=os.path.join(os.getcwd(), "gachafiles", "rolls"),
+        title="Select Existing Save File",
+        filetypes=(("JSON files", "*.json"), ("all files", "*.*")),
+    )
+
+    if file_path:  # User selected an existing file
+        current_save_file_path = file_path
+        rollButton1.config(state=NORMAL)
+        saveFilePromptLabel.destroy()  # Hide the prompt
+        print(f"Existing save file selected: {current_save_file_path}")
+    else:  # User cancelled or wants to create a new file
+        file_path = filedialog.asksaveasfilename(
+            initialdir=os.path.join(os.getcwd(), "gachafiles", "rolls"),
+            title="Create New Save File",
+            filetypes=(("JSON files", "*.json"), ("all files", "*.*")),
+            defaultextension=".json",
+        )
+        if file_path:
+            current_save_file_path = file_path
+            # Ensure the file is empty or initialized as an empty JSON array
+            if not os.path.exists(current_save_file_path) or os.path.getsize(current_save_file_path) == 0:
+                with open(current_save_file_path, "w") as f:
+                    json.dump([], f)
+            rollButton1.config(state=NORMAL)
+            saveFilePromptLabel.destroy()  # Hide the prompt
+            print(f"New save file created/selected: {current_save_file_path}")
+        else:
+            rollButton1.config(state=DISABLED)
+            print("No save file selected.")
+
 def prepare_gacha():
     global activemode
+    global current_save_file_path
+    if not current_save_file_path:
+        print("Please select a save file first.")
+        return
     mode = activemode
     minvalue = float(min.get())
     maxvalue = float(max.get())
@@ -524,6 +612,28 @@ descriptionLabel = Label(
     wraplength=800,
 )
 descriptionLabel.place(x=512, y=120, in_=root, anchor="n")
+
+saveFilePromptLabel = Label(
+    root,
+    text="Select or create a save file to roll",
+    pady=10,
+    bg="#1f1f1f",
+    fg="#FFD700", # Gold color for visibility
+    font=(selectedfont, 12),
+    wraplength=800,
+)
+saveFilePromptLabel.place(x=512, y=100, in_=root, anchor="n")
+
+selectOrCreateFileButton = Button(
+    root,
+    text="Select/Create Save File",
+    width=25,
+    command=lambda: select_or_create_save_file(),
+    font=(selectedfont, 12),
+    background="#111",
+    fg="#FFF",
+)
+selectOrCreateFileButton.place(x=750, y=110, in_=root, anchor="w")
 
 headerLabel = Label(
     root, pady=0, bg="#1f1f1f", fg="#FFF", font=(selectedfont, 20), wraplength=800
@@ -842,8 +952,11 @@ rollButton1 = Button(
     font=(selectedfont, 30),
     background="#111",
     fg="#FFF",
+    state=DISABLED, # Disable at startup
 )
 rollButton1.place(x=512, y=500, in_=root, anchor="center")
+
+
 
 w = Spinbox(
     root,
